@@ -8,6 +8,7 @@
 
 import UIKit;
 import SafariServices;
+import BmsSDK;
 
 class ViewController: UIViewController {
     
@@ -17,10 +18,11 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad();
         
+        initMap()
+    }
+    
+    func testSDK() {
         var requestDistanceBeacons:[IBeacon] = [];
-        let beacon:IBeacon = IBeacon(uuid: "F7826DA6-4FA2-4E98-8024-BC5B71E0893B", major: 100, minor: 2);
-//        let beacon2:IBeacon = IBeacon(uuid: "F7826DA6-4FA2-4E98-8024-BC5B71E0893A", major: 100, minor: 3);
-        requestDistanceBeacons.append(beacon);
 //        requestDistanceBeacons.append(beacon2);
         
         // configure bms sdk settings at first
@@ -30,7 +32,7 @@ class ViewController: UIViewController {
         // to enable customer attendance feature
         // to enable broadcasst
         // to enable proximity alert
-        viaBmsCtrl.setting(alert: true, background: true, site: false, minisitesView: .LIST, autoSiteDuration: 0, tracking: false, enableMQTT: false, attendance: true, checkinDuration: 5, checkoutDuration: 20, requestDistanceBeacons: requestDistanceBeacons, bmsEnvironment: .DEV, beaconRegionRange: 10, beaconRegionUUIDFilter: true, isBroadcasting: true, proximityAlert: true, proximityAlertThreshold: 20);
+        viaBmsCtrl.setting(alert: true, background: true, site: true, minisitesView: .LIST, autoSiteDuration: 0, tracking: false, enableMQTT: false, attendance: false, checkinDuration: 5, checkoutDuration: 20, requestDistanceBeacons: requestDistanceBeacons, bmsEnvironment: .DEV, beaconRegionRange: 10, beaconRegionUUIDFilter: false, isBroadcasting: false, proximityAlert: false, proximityAlertThreshold: 20, proximityAwayThreshold: 60, proximityRange: 20);
         
         // optional to attach delegate
         // 4 callbacks
@@ -42,7 +44,17 @@ class ViewController: UIViewController {
 
         // this method must be called at first to do handshake with bms
         // sdkInited callback will be called
-        viaBmsCtrl.initSdk(uiViewController: self, sdk_key: "71b20b69d6c313e5a226b910ccac09d35c68caaec7c7303984f8caae0a7fdb25");
+        viaBmsCtrl.initSdk(uiViewController: self, sdk_key: "67bcdfca98833eb53bf1958a03b92777317bf7c85a1a8d3b616fb30a761d7d73");
+    }
+    
+    func initMap() {
+        let screenRect = UIScreen.main.bounds
+        let screenWidth = screenRect.size.width
+        let screenHeight = screenRect.size.height
+        
+        viaBmsCtrl.delegate = self;
+        
+        viaBmsCtrl.initMap(view: self.view!, width: screenWidth, height: screenHeight, sdk_key: "cbbdb337456a549dc9351790b3955970a186b6341ba5e9dfc0b596b4452c51af");
     }
     
     // start sdk servicaze
@@ -68,6 +80,51 @@ class ViewController: UIViewController {
 
 
 extension ViewController: ViaBmsCtrlDelegate {
+    func onZonesLoaded(zones: [Dictionary<String, Any>]) {
+        print("onZonesLoaded", zones)
+    }
+    
+    func onProperZoneRecordsLoaded(zoneRecords: [Dictionary<String, Any>]) {
+        print("onProperZoneRecordsLoaded", zoneRecords)
+        var markers: [MarkerInput] = []
+        markers.append(MarkerInput(zoneName: "Zone A", content: "<p style=\"color: #eb4d4b;\">3</p>"))
+        viaBmsCtrl.addMarkers(markers: markers)
+    }
+    
+    func onMapInited(status: Bool) {
+        print("onMapInited", status)
+        if (status) {
+//            viaBmsCtrl.addMarker(zoneName: "Zone A", content: "<p style=\"color: #eb4d4b;\">1</p>")
+            var markers: [MarkerInput] = []
+            markers.append(MarkerInput(zoneName: "Zone A", content: "<p style=\"color: #eb4d4b;\">1</p>"))
+            markers.append(MarkerInput(zoneName: "Zone B", content: "<p style=\"color: #eb4d4b;\">2</p>"))
+            viaBmsCtrl.addMarkers(markers: markers)
+            
+            viaBmsCtrl.getZones()
+            viaBmsCtrl.getLastProperZoneRecords()
+        }
+    }
+    
+    func onZoneClicked(zoneName: String) {
+        print(zoneName, " is clicked")
+    }
+    
+    func onNewProximityAlert(uuid: String, major: Int, minor: Int, deviceUUID: String) {
+        
+    }
+    
+    func onBluetoothStateOn() {
+        
+    }
+    
+    func onBluetoothStateOff() {
+        
+    }
+    
+    func onAddZoneRecord(uuid: String?, major: Int, minor: Int, newZones: [ViaZone]?) {
+        
+    }
+    
     
     // this will be called when sdk is inited
     // list of zones in the sdk application is passed here
@@ -76,7 +133,7 @@ extension ViewController: ViaBmsCtrlDelegate {
         
         // this method must be called in order to enable attendance and tracking feature
         // authorizedZones is optional field
-        viaBmsCtrl.initCustomer(identifier: "long_test_01", email: "example@email.com", phone: "+000000000", authorizedZones: zones);
+        viaBmsCtrl.initCustomer(identifier: "long_test_01", email: "example@email.com", phone: "+000000000", authorizedZones: []);
     }
     
     func customerInited(inited: Bool) {
@@ -100,6 +157,14 @@ extension ViewController: ViaBmsCtrlDelegate {
 //        for aBeacon in beacons {
 //            print("key " + aBeacon.getKey() + " distance " + String(aBeacon.distance));
 //        }
+    }
+    
+    func deviceSiteLoaded(loaded: Bool, error: String?) {
+        if (error != nil) {
+            print("deviceSiteLoaded: " + loaded.description + " with error " + error!);
+        } else {
+            print("deviceSiteLoaded: " + loaded.description);
+        }
     }
 }
 
