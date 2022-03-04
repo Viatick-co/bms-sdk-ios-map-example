@@ -91,17 +91,40 @@ extension ViewController: ViaBmsCtrlDelegate {
         viaBmsCtrl.addMarkers(markers: markers)
     }
     
+    func blueDotSimulation() {
+        var markers: [MarkerInput] = []
+        markers.append(MarkerInput(zoneName: "Zone A", content: ViaBmsCtrl.BLUEDOT_CONTENT))
+        viaBmsCtrl.addMarkers(markers: markers)
+        //self.viaBmsCtrl.updateBlueDotPosition(zoneName: "Zone B")
+        //viaBmsCtrl.updateBlueDotPosition(zoneName: "Zone B")
+        DispatchQueue.main.asyncAfter(deadline: .now() + (3)) {
+            self.viaBmsCtrl.removeMarkers(markers: ["Zone A"])
+            self.viaBmsCtrl.addMarker(zoneName: "Zone B", content: ViaBmsCtrl.BLUEDOT_CONTENT)
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + (5)) {
+            self.viaBmsCtrl.removeMarkers(markers: ["Zone B"])
+            self.viaBmsCtrl.addMarker(zoneName: "Zone F", content: ViaBmsCtrl.BLUEDOT_CONTENT)
+        }
+    }
+    
+    func addRemoveMarkers() {
+        viaBmsCtrl.addMarker(zoneName: "Zone A", content: "<p style=\"color: #eb4d4b;\">1</p>")
+        viaBmsCtrl.removeMarkers(markers: ["Zone A"])
+        
+        var markers: [MarkerInput] = []
+        markers.append(MarkerInput(zoneName: "Zone A", content: "<p style=\"color: #eb4d4b;\">1</p>"))
+        markers.append(MarkerInput(zoneName: "Zone B", content: "<p style=\"color: #eb4d4b;\">2</p>"))
+        viaBmsCtrl.addMarkers(markers: markers)
+    }
+    
     func onMapInited(status: Bool) {
         print("onMapInited", status)
         if (status) {
-//            viaBmsCtrl.addMarker(zoneName: "Zone A", content: "<p style=\"color: #eb4d4b;\">1</p>")
-            var markers: [MarkerInput] = []
-            markers.append(MarkerInput(zoneName: "Zone A", content: "<p style=\"color: #eb4d4b;\">1</p>"))
-            markers.append(MarkerInput(zoneName: "Zone B", content: "<p style=\"color: #eb4d4b;\">2</p>"))
-            viaBmsCtrl.addMarkers(markers: markers)
+            //addRemoveMarkers()
             
-            viaBmsCtrl.getZones()
-            viaBmsCtrl.getLastProperZoneRecords()
+            // Comment this on and comment out addRemoveMakers to run the blue dot simulation sample instead
+            blueDotSimulation()
         }
     }
     
